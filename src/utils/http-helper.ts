@@ -31,9 +31,24 @@ export const badRequest = async (message: string): Promise<HttpResponse> =>{
     }
 }
 
+export const unauthorized = async(message: string): Promise<HttpResponse> =>{
+    return{
+        statusCode: 401,
+        body: message || null
+    }
+}
+
+export const notFound = async(message: string): Promise<HttpResponse> =>{
+    return{
+        statusCode: 404,
+        body: message || null
+    }
+}
+
 export const conflict = async (message: string): Promise<HttpResponse> =>{
     return{
         statusCode: 409,
         body: message || null
     }
 }
+

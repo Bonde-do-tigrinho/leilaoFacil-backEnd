@@ -1,7 +1,10 @@
 import { userModel } from "../models/usuarioModel";
 import * as UserData from "../repositories/user-repository"
-import { badRequest, conflict, created } from "../utils/http-helper";
+import { badRequest, conflict, created, notFound, ok, unauthorized } from "../utils/http-helper";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken"
+
+const JWT_SECRET = process.env.JWT_SECRET || "teste123"
 
 export const createUserService = async (user: userModel & {confirmPassword: string}) =>{
     let response = null
@@ -11,7 +14,7 @@ export const createUserService = async (user: userModel & {confirmPassword: stri
     }
 
     if(!user.nome || !user.password || !user.cargo || !user.email || !user.confirmPassword){
-        return badRequest("Estão faltando dados obrigatórios")
+        return badRequest("Todos os campos precisam estar preenchidos")
     }
 
     if(user.password !== user.confirmPassword){
@@ -35,5 +38,69 @@ export const createUserService = async (user: userModel & {confirmPassword: stri
     await UserData.insertUser(userToInsert)
     response = created()
 
+    return response
+}
+
+export const alterPasswordService = async (email: string, oldPassword: string, newPassword: string, confirmNewPassword: string) =>{
+    let response = null
+
+    if(!email || !oldPassword || !newPassword || !confirmNewPassword){
+        response = badRequest("Todos os campos precisam estar preenchidos")
+        return response
+    }
+
+    if(newPassword !== confirmNewPassword){
+         response = badRequest("A nova senha e a confirmação não conferem")
+         return response
+    }
+
+    const user = await UserData.findUserByEmail(email)
+    if(!user){
+         response = notFound("Usuário não encontrado")
+         return response
+    }
+
+    const matchPassword = await bcrypt.compare(oldPassword, user.password)
+    if(!matchPassword){
+        response = unauthorized("A senha antiga está incorreta")
+        return response
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+    await UserData.alterPassword(email, hashedPassword)
+
+    response = ok("Senha alterada com sucesso")
+
+    return response
+
+}
+
+export const loginUser = async (email: string, password:string) =>{
+    let response = null
+    
+    if(!email || !password){
+        response = badRequest("Todos os campos precisam estar preenchidos")
+        return response
+    }
+
+    const user = await UserData.findUserByEmail(email)
+    if(!user){
+        response = notFound("Usuário não encontrado")
+        return response
+    }
+
+    const matchPassword = await bcrypt.compare(password, user.password)
+    if(!matchPassword){
+        response = unauthorized("senha incorreta")
+        return response
+    }
+
+    const token = jwt.sign(
+        {userId: user._id, email: user.email, cargo: user.cargo},
+        JWT_SECRET,
+        {expiresIn: "1h"}
+    )
+
+    response = ok({message: "Login realizado com sucesso", token})
     return response
 }
