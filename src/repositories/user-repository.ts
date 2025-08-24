@@ -29,3 +29,15 @@ export const findUserByEmail = async (email: string)=>{
         throw error;
     }
 }
+
+export const alterPassword = async (email: string, hashedPassword: string) =>{
+    try{
+        const db = connectToDatabase.db("MotorDeBusca")
+        const users = db.collection<userModel>("users")
+
+        const result = await users.updateOne({email}, {$set: {password: hashedPassword}})
+    }catch(e){
+        console.error("erro ao alterar senha", e)
+        throw e;
+    }
+}

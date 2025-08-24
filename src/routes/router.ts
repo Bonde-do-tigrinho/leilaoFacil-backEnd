@@ -7,5 +7,7 @@ const router = Router();
 router.get('/imoveis', ImoveisController.ListImoveis)
 
 router.post('/usuario', UserController.postUser)
+router.post('/usuario/login', UserController.postLogin)
+router.patch('/usuario', UserController.patchUser)
 
 export default router;
