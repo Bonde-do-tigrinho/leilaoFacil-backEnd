@@ -29,7 +29,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.18.0",
     "mongoose": "^8.17.2",
-    "tsup": "^8.5.0"
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -37,7 +38,6 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mongoose": "^5.11.96",
-    "tsx": "^4.20.4",
-    "typescript": "^5.9.2"
+    "tsx": "^4.20.4"
   }
 }
