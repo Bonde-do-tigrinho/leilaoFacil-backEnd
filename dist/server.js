@@ -140,6 +140,7 @@ var ListImoveis = (req, res) => __async(null, null, function* () {
 });
 
 // src/repositories/user-repository.ts
+var import_mongodb2 = require("mongodb");
 var insertUser = (user) => __async(null, null, function* () {
   try {
     const db = connectToDatabase.db("MotorDeBusca");
@@ -167,11 +168,46 @@ var alterPassword = (email, hashedPassword) => __async(null, null, function* () 
   try {
     const db = connectToDatabase.db("MotorDeBusca");
     const users = db.collection("users");
-    const result = yield users.updateOne({ email }, { $set: { password: hashedPassword } });
+    const result = yield users.updateOne(
+      { email },
+      { $set: { password: hashedPassword } }
+    );
   } catch (e) {
     console.error("erro ao alterar senha", e);
     throw e;
   }
+});
+var addFavorite = (userId, imovelId) => __async(null, null, function* () {
+  console.log("Adicionando favorito:", { userId, imovelId });
+  if (!import_mongodb2.ObjectId.isValid(userId)) {
+    throw new Error("userId inv\xE1lido");
+  }
+  if (!import_mongodb2.ObjectId.isValid(imovelId)) {
+    throw new Error("imovelId inv\xE1lido");
+  }
+  const db = connectToDatabase.db("MotorDeBusca");
+  const users = db.collection("users");
+  const result = yield users.updateOne(
+    { _id: new import_mongodb2.ObjectId(userId) },
+    { $addToSet: { favoritos: new import_mongodb2.ObjectId(imovelId) } }
+  );
+  return result;
+});
+var removeFavorite = (userId, imovelId) => __async(null, null, function* () {
+  console.log("Removendo favorito:", { userId, imovelId });
+  if (!import_mongodb2.ObjectId.isValid(userId)) {
+    throw new Error("userId inv\xE1lido");
+  }
+  if (!import_mongodb2.ObjectId.isValid(imovelId)) {
+    throw new Error("imovelId inv\xE1lido");
+  }
+  const db = connectToDatabase.db("MotorDeBusca");
+  const users = db.collection("users");
+  const result = yield users.updateOne(
+    { _id: new import_mongodb2.ObjectId(userId) },
+    { $pull: { favoritos: new import_mongodb2.ObjectId(imovelId) } }
+  );
+  return result;
 });
 
 // src/services/user-services.ts
@@ -255,6 +291,20 @@ var loginUser = (email, password) => __async(null, null, function* () {
   response = ok({ message: "Login realizado com sucesso", token });
   return response;
 });
+var addFavoriteService = (userId, imovelId) => __async(null, null, function* () {
+  if (!userId || !imovelId) {
+    return badRequest("Erro ao adicionar favorito");
+  }
+  yield addFavorite(userId, imovelId);
+  return ok("Favorito adicionado com sucesso");
+});
+var removeFavoriteService = (userId, imovelId) => __async(null, null, function* () {
+  if (!userId || !imovelId) {
+    return badRequest("Erro ao remover favorito");
+  }
+  yield removeFavorite(userId, imovelId);
+  return ok("Favorito removido com sucesso");
+});
 
 // src/controller/user-controller.ts
 var postUser = (req, res) => __async(null, null, function* () {
@@ -272,6 +322,22 @@ var postLogin = (req, res) => __async(null, null, function* () {
 var patchUser = (req, res) => __async(null, null, function* () {
   const { email, oldPassword, newPassword, confirmNewPassword } = req.body;
   const httpResponse = yield alterPasswordService(email, oldPassword, newPassword, confirmNewPassword);
+  if (httpResponse) {
+    res.status(httpResponse.statusCode).json(httpResponse.body);
+  }
+});
+var patchFavorite = (req, res) => __async(null, null, function* () {
+  const userId = req.user.userId;
+  const { imovelId } = req.body;
+  const httpResponse = yield addFavoriteService(userId, imovelId);
+  if (httpResponse) {
+    res.status(httpResponse.statusCode).json(httpResponse.body);
+  }
+});
+var patchRemoveFavorite = (req, res) => __async(null, null, function* () {
+  const userId = req.user.userId;
+  const { imovelId } = req.body;
+  const httpResponse = yield removeFavoriteService(userId, imovelId);
   if (httpResponse) {
     res.status(httpResponse.statusCode).json(httpResponse.body);
   }
@@ -308,9 +374,8 @@ router.get("/imoveis", ListImoveis);
 router.post("/usuario", authenticateLogin, adminVerification, postUser);
 router.post("/usuario/login", postLogin);
 router.patch("/usuario", patchUser);
-router.get("/teste", authenticateLogin, adminVerification, (req, res) => {
-  res.json({ message: "rota protegida" });
-});
+router.patch("/usuario/favoritos", authenticateLogin, patchFavorite);
+router.patch("/usuario/favoritos/remover", authenticateLogin, patchRemoveFavorite);
 var router_default = router;
 
 // src/app.ts

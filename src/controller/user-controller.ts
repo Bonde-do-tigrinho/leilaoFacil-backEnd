@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { alterPasswordService, createUserService, loginUser } from "../services/user-services";
+import { addFavoriteService, alterPasswordService, createUserService, loginUser, removeFavoriteService } from "../services/user-services";
 
 export const postUser = async (req: Request, res: Response) =>{
     const bodyValue = req.body;
@@ -25,4 +25,24 @@ export const patchUser = async (req: Request, res: Response) =>{
         res.status(httpResponse.statusCode).json(httpResponse.body)
     }
 
+}
+
+export const patchFavorite = async (req: Request, res: Response) =>{
+    const userId = (req as any).user.userId;
+    const {imovelId} = req.body;
+
+    const httpResponse = await addFavoriteService(userId, imovelId);
+    if(httpResponse){
+        res.status(httpResponse.statusCode).json(httpResponse.body)
+    }
+}
+
+export const patchRemoveFavorite = async (req: Request, res: Response) =>{
+    const userId = (req as any).user.userId;
+    const {imovelId} = req.body;
+
+    const httpResponse = await removeFavoriteService(userId, imovelId);
+    if(httpResponse){
+        res.status(httpResponse.statusCode).json(httpResponse.body)
+    }
 }
