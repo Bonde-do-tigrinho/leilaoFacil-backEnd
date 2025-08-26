@@ -33,6 +33,8 @@ export const createUserService = async (user: userModel & {confirmPassword: stri
         email: user.email,
         password: hashedPassword,
         cargo: user.cargo,
+        favoritos: [],
+        isAdmin: false
     }
 
     await UserData.insertUser(userToInsert)
@@ -96,7 +98,7 @@ export const loginUser = async (email: string, password:string) =>{
     }
 
     const token = jwt.sign(
-        {userId: user._id, email: user.email, cargo: user.cargo},
+        {userId: user._id, email: user.email, cargo: user.cargo, isAdmin: user.isAdmin},
         JWT_SECRET,
         {expiresIn: "1h"}
     )
