@@ -106,3 +106,23 @@ export const loginUser = async (email: string, password:string) =>{
     response = ok({message: "Login realizado com sucesso", token})
     return response
 }
+
+export const addFavoriteService = async (userId: string, imovelId: string) =>{
+
+    if(!userId || !imovelId){
+        return badRequest("Erro ao adicionar favorito")
+    }
+
+    await UserData.addFavorite(userId, imovelId)
+    return ok("Favorito adicionado com sucesso")
+}
+
+export const removeFavoriteService = async (userId: string, imovelId: string) =>{
+
+    if(!userId || !imovelId){
+        return badRequest("Erro ao remover favorito")
+    }
+
+    await UserData.removeFavorite(userId, imovelId)
+    return ok("Favorito removido com sucesso")
+}

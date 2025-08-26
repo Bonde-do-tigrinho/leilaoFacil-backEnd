@@ -5,15 +5,14 @@ import { authenticateLogin } from '../middlewares/authLogin';
 import { adminVerification } from '../middlewares/adminVerification';
 
 const router = Router();
-
+//imoveis
 router.get('/imoveis', ImoveisController.ListImoveis)
 
+//usuario
 router.post('/usuario', authenticateLogin, adminVerification, UserController.postUser)
 router.post('/usuario/login', UserController.postLogin)
 router.patch('/usuario', UserController.patchUser)
-
-router.get('/teste', authenticateLogin, adminVerification, (req, res) =>{
-    res.json({message: "rota protegida"})
-})
+router.patch('/usuario/favoritos', authenticateLogin, UserController.patchFavorite)
+router.patch('/usuario/favoritos/remover', authenticateLogin, UserController.patchRemoveFavorite)
 
 export default router;
