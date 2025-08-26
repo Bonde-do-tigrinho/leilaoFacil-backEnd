@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken"
-import { unauthorized } from "../utils/http-helper";
+
 
 const JWT_SECRET = process.env.JWT_SECRET || "segredo super secreto"
 

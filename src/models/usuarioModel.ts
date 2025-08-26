@@ -1,7 +1,10 @@
+import { ObjectId } from "mongodb";
+
 export interface userModel {
   nome: string;
   email: string;
   password: string;
   cargo: string;
-  //favoritos: Types.ObjectId[]; // Adicionado o campo favoritos  
+  favoritos: ObjectId[];
+  isAdmin: boolean;
 }

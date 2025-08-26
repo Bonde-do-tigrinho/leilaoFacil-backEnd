@@ -198,7 +198,9 @@ var createUserService = (user) => __async(null, null, function* () {
     nome: user.nome,
     email: user.email,
     password: hashedPassword,
-    cargo: user.cargo
+    cargo: user.cargo,
+    favoritos: [],
+    isAdmin: false
   };
   yield insertUser(userToInsert);
   response = created();
@@ -246,7 +248,7 @@ var loginUser = (email, password) => __async(null, null, function* () {
     return response;
   }
   const token = import_jsonwebtoken.default.sign(
-    { userId: user._id, email: user.email, cargo: user.cargo },
+    { userId: user._id, email: user.email, cargo: user.cargo, isAdmin: user.isAdmin },
     JWT_SECRET,
     { expiresIn: "1h" }
   );
@@ -275,12 +277,40 @@ var patchUser = (req, res) => __async(null, null, function* () {
   }
 });
 
+// src/middlewares/authLogin.ts
+var import_jsonwebtoken2 = __toESM(require("jsonwebtoken"));
+var JWT_SECRET2 = process.env.JWT_SECRET || "segredo super secreto";
+var authenticateLogin = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) {
+    res.status(401).json({ error: "token n\xE3o fornecido" });
+  }
+  import_jsonwebtoken2.default.verify(token, JWT_SECRET2, (err, user) => {
+    if (err) return res.status(401).json({ error: "token inv\xE1lido" });
+    req.user = user;
+    next();
+  });
+};
+
+// src/middlewares/adminVerification.ts
+var adminVerification = (req, res, next) => {
+  const user = req.user;
+  if (!user || !user.isAdmin) {
+    return unauthorized("Acesso negado");
+  }
+  return next();
+};
+
 // src/routes/router.ts
 var router = (0, import_express.Router)();
 router.get("/imoveis", ListImoveis);
-router.post("/usuario", postUser);
+router.post("/usuario", authenticateLogin, adminVerification, postUser);
 router.post("/usuario/login", postLogin);
 router.patch("/usuario", patchUser);
+router.get("/teste", authenticateLogin, adminVerification, (req, res) => {
+  res.json({ message: "rota protegida" });
+});
 var router_default = router;
 
 // src/app.ts
