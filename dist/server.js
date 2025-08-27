@@ -79,12 +79,21 @@ var findFavorites = (userId) => __async(null, null, function* () {
   try {
     const db = connectToDatabase.db("MotorDeBusca");
     const users = db.collection("users");
+    const imoveis = db.collection("imoveis");
     const user = yield users.findOne({ _id: new import_mongodb2.ObjectId(userId) });
     if (!user) {
       console.warn("Usu\xE1rio n\xE3o encontrado");
       return null;
     }
-    return user.favoritos;
+    if (!user.favoritos || user.favoritos.length === 0) {
+      console.warn("Usu\xE1rio n\xE3o possui favoritos");
+      return [];
+    }
+    const favoritosIds = user.favoritos.map(
+      (id) => typeof id === "string" ? new import_mongodb2.ObjectId(id) : id
+    );
+    const favoritos = yield imoveis.find({ _id: { $in: favoritosIds } }).toArray();
+    return favoritos;
   } catch (e) {
     console.log(e);
     process.exit(1);
