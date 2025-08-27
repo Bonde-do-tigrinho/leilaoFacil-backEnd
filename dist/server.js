@@ -250,6 +250,18 @@ var removeFavorite = (userId, imovelId) => __async(null, null, function* () {
   );
   return result;
 });
+var listUser = (userId) => __async(null, null, function* () {
+  try {
+    const db = connectToDatabase.db("MotorDeBusca");
+    const users = db.collection("users");
+    const query = { _id: new import_mongodb3.ObjectId(userId) };
+    const data = yield users.findOne(query);
+    return data;
+  } catch (error) {
+    console.error("erro ao listar usu\xE1rio", error);
+    throw error;
+  }
+});
 
 // src/services/user-services.ts
 var import_bcrypt = __toESM(require("bcrypt"));
@@ -346,6 +358,16 @@ var removeFavoriteService = (userId, imovelId) => __async(null, null, function* 
   yield removeFavorite(userId, imovelId);
   return ok("Favorito removido com sucesso");
 });
+var listUserService = (userId) => __async(null, null, function* () {
+  let response = null;
+  const data = yield listUser(userId);
+  if (!userId) {
+    response = badRequest("Erro ao listar usu\xE1rio");
+    return response;
+  }
+  response = ok(data);
+  return response;
+});
 
 // src/controller/user-controller.ts
 var postUser = (req, res) => __async(null, null, function* () {
@@ -383,6 +405,13 @@ var patchRemoveFavorite = (req, res) => __async(null, null, function* () {
     res.status(httpResponse.statusCode).json(httpResponse.body);
   }
 });
+var getUser = (req, res) => __async(null, null, function* () {
+  const userId = req.user.userId;
+  const httpResponse = yield listUserService(userId);
+  if (httpResponse) {
+    res.status(httpResponse.statusCode).json(httpResponse.body);
+  }
+});
 
 // src/middlewares/authLogin.ts
 var import_jsonwebtoken2 = __toESM(require("jsonwebtoken"));
@@ -411,8 +440,9 @@ var adminVerification = (req, res, next) => {
 
 // src/routes/router.ts
 var router = (0, import_express.Router)();
-router.get("/imoveis", ListImoveis);
+router.get("/imoveis", authenticateLogin, ListImoveis);
 router.get("/imoveis/favoritos", authenticateLogin, ListFavorites);
+router.get("/usuario", authenticateLogin, getUser);
 router.post("/usuario", authenticateLogin, adminVerification, postUser);
 router.post("/usuario/login", postLogin);
 router.patch("/usuario", patchUser);

@@ -86,5 +86,18 @@ export const removeFavorite = async (userId: string, imovelId: string) => {
   return result;
 };
 
+export const listUser = async (userId: string) => {
+  try {
+    const db = connectToDatabase.db("MotorDeBusca");
+    const users = db.collection<userModel>("users");
 
+    const query = { _id: new ObjectId(userId) };
+    const data = await users.findOne(query);
+
+    return data;
+  } catch (error) {
+    console.error("erro ao listar usuário", error);
+    throw error;
+  }
+};
 

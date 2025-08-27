@@ -127,4 +127,18 @@ export const removeFavoriteService = async (userId: string, imovelId: string) =>
     return ok("Favorito removido com sucesso")
 }
 
+export const listUserService = async (userId: string) => {
+    let response = null;
+    const data = await UserData.listUser(userId);
+
+
+    if(!userId){
+        response = badRequest("Erro ao listar usuário");
+        return response;
+    }
+
+    response = ok(data);
+    return response;
+}
+
 
