@@ -57,6 +57,7 @@ var connectToDatabase = new import_mongodb.MongoClient(MONGO_URI);
 var import_express = require("express");
 
 // src/repositories/imoveis-repository.ts
+var import_mongodb2 = require("mongodb");
 var findAllImoveis = () => __async(null, null, function* () {
   try {
     const db = connectToDatabase.db("MotorDeBusca");
@@ -71,6 +72,30 @@ var findAllImoveis = () => __async(null, null, function* () {
     return data;
   } catch (error) {
     console.log(error);
+    process.exit(1);
+  }
+});
+var findFavorites = (userId) => __async(null, null, function* () {
+  try {
+    const db = connectToDatabase.db("MotorDeBusca");
+    const users = db.collection("users");
+    const imoveis = db.collection("imoveis");
+    const user = yield users.findOne({ _id: new import_mongodb2.ObjectId(userId) });
+    if (!user) {
+      console.warn("Usu\xE1rio n\xE3o encontrado");
+      return null;
+    }
+    if (!user.favoritos || user.favoritos.length === 0) {
+      console.warn("Usu\xE1rio n\xE3o possui favoritos");
+      return [];
+    }
+    const favoritosIds = user.favoritos.map(
+      (id) => typeof id === "string" ? new import_mongodb2.ObjectId(id) : id
+    );
+    const favoritos = yield imoveis.find({ _id: { $in: favoritosIds } }).toArray();
+    return favoritos;
+  } catch (e) {
+    console.log(e);
     process.exit(1);
   }
 });
@@ -132,15 +157,31 @@ var getImoveisService = () => __async(null, null, function* () {
   }
   return response;
 });
+var ListFavoritesService = (userId) => __async(null, null, function* () {
+  let response = null;
+  if (!userId) {
+    response = yield badRequest("Erro ao listar favoritos");
+  }
+  const data = yield findFavorites(userId);
+  response = yield ok(data);
+  return response;
+});
 
 // src/controller/imoveis-controller.ts
 var ListImoveis = (req, res) => __async(null, null, function* () {
   const httpResponse = yield getImoveisService();
   res.status(httpResponse.statusCode).json(httpResponse.body);
 });
+var ListFavorites = (req, res) => __async(null, null, function* () {
+  const userId = req.user.userId;
+  const httpResponse = yield ListFavoritesService(userId);
+  if (httpResponse) {
+    res.status(httpResponse.statusCode).json(httpResponse.body);
+  }
+});
 
 // src/repositories/user-repository.ts
-var import_mongodb2 = require("mongodb");
+var import_mongodb3 = require("mongodb");
 var insertUser = (user) => __async(null, null, function* () {
   try {
     const db = connectToDatabase.db("MotorDeBusca");
@@ -179,33 +220,33 @@ var alterPassword = (email, hashedPassword) => __async(null, null, function* () 
 });
 var addFavorite = (userId, imovelId) => __async(null, null, function* () {
   console.log("Adicionando favorito:", { userId, imovelId });
-  if (!import_mongodb2.ObjectId.isValid(userId)) {
+  if (!import_mongodb3.ObjectId.isValid(userId)) {
     throw new Error("userId inv\xE1lido");
   }
-  if (!import_mongodb2.ObjectId.isValid(imovelId)) {
+  if (!import_mongodb3.ObjectId.isValid(imovelId)) {
     throw new Error("imovelId inv\xE1lido");
   }
   const db = connectToDatabase.db("MotorDeBusca");
   const users = db.collection("users");
   const result = yield users.updateOne(
-    { _id: new import_mongodb2.ObjectId(userId) },
-    { $addToSet: { favoritos: new import_mongodb2.ObjectId(imovelId) } }
+    { _id: new import_mongodb3.ObjectId(userId) },
+    { $addToSet: { favoritos: new import_mongodb3.ObjectId(imovelId) } }
   );
   return result;
 });
 var removeFavorite = (userId, imovelId) => __async(null, null, function* () {
   console.log("Removendo favorito:", { userId, imovelId });
-  if (!import_mongodb2.ObjectId.isValid(userId)) {
+  if (!import_mongodb3.ObjectId.isValid(userId)) {
     throw new Error("userId inv\xE1lido");
   }
-  if (!import_mongodb2.ObjectId.isValid(imovelId)) {
+  if (!import_mongodb3.ObjectId.isValid(imovelId)) {
     throw new Error("imovelId inv\xE1lido");
   }
   const db = connectToDatabase.db("MotorDeBusca");
   const users = db.collection("users");
   const result = yield users.updateOne(
-    { _id: new import_mongodb2.ObjectId(userId) },
-    { $pull: { favoritos: new import_mongodb2.ObjectId(imovelId) } }
+    { _id: new import_mongodb3.ObjectId(userId) },
+    { $pull: { favoritos: new import_mongodb3.ObjectId(imovelId) } }
   );
   return result;
 });
@@ -371,6 +412,7 @@ var adminVerification = (req, res, next) => {
 // src/routes/router.ts
 var router = (0, import_express.Router)();
 router.get("/imoveis", ListImoveis);
+router.get("/imoveis/favoritos", authenticateLogin, ListFavorites);
 router.post("/usuario", authenticateLogin, adminVerification, postUser);
 router.post("/usuario/login", postLogin);
 router.patch("/usuario", patchUser);

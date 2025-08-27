@@ -126,3 +126,5 @@ export const removeFavoriteService = async (userId: string, imovelId: string) =>
     await UserData.removeFavorite(userId, imovelId)
     return ok("Favorito removido com sucesso")
 }
+
+

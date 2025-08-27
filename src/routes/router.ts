@@ -7,6 +7,7 @@ import { adminVerification } from '../middlewares/adminVerification';
 const router = Router();
 //imoveis
 router.get('/imoveis', ImoveisController.ListImoveis)
+router.get('/imoveis/favoritos', authenticateLogin ,ImoveisController.ListFavorites)
 
 //usuario
 router.post('/usuario', authenticateLogin, adminVerification, UserController.postUser)
