@@ -1,8 +1,9 @@
-import { findAllImoveis } from "../repositories/imoveis-repository"
-import { noContent, ok } from "../utils/http-helper"
+import * as ImoveisRepository from "../repositories/imoveis-repository"
+import { badRequest, noContent, ok } from "../utils/http-helper"
+
 
 export const getImoveisService = async () => {
-    const data = await findAllImoveis()
+    const data = await ImoveisRepository.findAllImoveis()
 
     let response = null
 
@@ -11,6 +12,19 @@ export const getImoveisService = async () => {
     }else{
         response = await noContent()
     }
+
+    return response;
+}
+
+export const ListFavoritesService = async (userId:string) =>{
+    let response = null
+
+    if(!userId){
+        response= await badRequest("Erro ao listar favoritos")
+    }
+
+    const data = await ImoveisRepository.findFavorites(userId);
+    response = await ok(data);
 
     return response;
 }
