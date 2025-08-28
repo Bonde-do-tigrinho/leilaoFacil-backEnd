@@ -40,6 +40,8 @@ export const alterPassword = async (email: string, hashedPassword: string) => {
       { email },
       { $set: { password: hashedPassword } }
     );
+
+    return result;
   } catch (e) {
     console.error("erro ao alterar senha", e);
     throw e;

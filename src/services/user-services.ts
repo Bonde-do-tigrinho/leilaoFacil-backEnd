@@ -108,23 +108,29 @@ export const loginUser = async (email: string, password:string) =>{
 }
 
 export const addFavoriteService = async (userId: string, imovelId: string) =>{
-
+    let response = null;
+    
     if(!userId || !imovelId){
-        return badRequest("Erro ao adicionar favorito")
+        response = badRequest("Erro ao adicionar favorito");
+        return response;
     }
 
     await UserData.addFavorite(userId, imovelId)
-    return ok("Favorito adicionado com sucesso")
+    response = ok("Favorito adicionado com sucesso");
+    return response;
 }
 
 export const removeFavoriteService = async (userId: string, imovelId: string) =>{
+    let response = null;
 
     if(!userId || !imovelId){
-        return badRequest("Erro ao remover favorito")
+        response = badRequest("Erro ao remover favorito");
+        return response;
     }
 
     await UserData.removeFavorite(userId, imovelId)
-    return ok("Favorito removido com sucesso")
+    response = ok("Favorito removido com sucesso");
+    return response;
 }
 
 export const listUserService = async (userId: string) => {
