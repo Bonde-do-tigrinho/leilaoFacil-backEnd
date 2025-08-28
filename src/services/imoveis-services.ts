@@ -28,3 +28,29 @@ export const ListFavoritesService = async (userId:string) =>{
 
     return response;
 }
+
+export const listBairrosService = async () =>{
+    let response = null;
+    const data = await ImoveisRepository.findBairros();
+
+    if(data){
+        response = await ok(data);
+    }else{
+        response = await noContent();
+    }
+
+    return response;
+}
+
+export const listImoveisFiltradosService = async (filtros: any) =>{
+    let response = null;
+
+    if(!filtros){
+        response = await badRequest("Filtros inválidos");
+    }
+
+    const data = await ImoveisRepository.filterImoveis(filtros);
+    response = await ok(data);
+
+    return response;
+}
