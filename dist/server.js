@@ -283,6 +283,7 @@ var alterPassword = (email, hashedPassword) => __async(null, null, function* () 
       { email },
       { $set: { password: hashedPassword } }
     );
+    return result;
   } catch (e) {
     console.error("erro ao alterar senha", e);
     throw e;
@@ -415,18 +416,24 @@ var loginUser = (email, password) => __async(null, null, function* () {
   return response;
 });
 var addFavoriteService = (userId, imovelId) => __async(null, null, function* () {
+  let response = null;
   if (!userId || !imovelId) {
-    return badRequest("Erro ao adicionar favorito");
+    response = badRequest("Erro ao adicionar favorito");
+    return response;
   }
   yield addFavorite(userId, imovelId);
-  return ok("Favorito adicionado com sucesso");
+  response = ok("Favorito adicionado com sucesso");
+  return response;
 });
 var removeFavoriteService = (userId, imovelId) => __async(null, null, function* () {
+  let response = null;
   if (!userId || !imovelId) {
-    return badRequest("Erro ao remover favorito");
+    response = badRequest("Erro ao remover favorito");
+    return response;
   }
   yield removeFavorite(userId, imovelId);
-  return ok("Favorito removido com sucesso");
+  response = ok("Favorito removido com sucesso");
+  return response;
 });
 var listUserService = (userId) => __async(null, null, function* () {
   let response = null;
