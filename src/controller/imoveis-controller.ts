@@ -15,3 +15,18 @@ export const ListFavorites = async (req:Request, res:Response) =>{
         res.status(httpResponse.statusCode).json(httpResponse.body)
     }
 }
+
+export const listBairros = async (req:Request, res: Response) =>{
+    const httpResponse = await ImoveisServices.listBairrosService();
+
+    res.status(httpResponse.statusCode).json(httpResponse.body);
+}
+
+export const listImoveisFiltrados = async (req: Request, res: Response)=>{
+    const filtros = req.body;
+    const httpResponse = await ImoveisServices.listImoveisFiltradosService(filtros);
+
+    if(httpResponse){
+        res.status(httpResponse.statusCode).json(httpResponse.body);
+    }
+}

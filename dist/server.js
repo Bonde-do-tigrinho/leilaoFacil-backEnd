@@ -99,6 +99,46 @@ var findFavorites = (userId) => __async(null, null, function* () {
     process.exit(1);
   }
 });
+var findBairros = () => __async(null, null, function* () {
+  try {
+    const db = connectToDatabase.db("MotorDeBusca");
+    const imoveis = db.collection("imoveis");
+    const bairros = yield imoveis.distinct("bairro");
+    return bairros;
+  } catch (e) {
+    console.log(e);
+    process.exit(1);
+  }
+});
+var filterImoveis = (filtros) => __async(null, null, function* () {
+  const db = connectToDatabase.db("MotorDeBusca");
+  const imoveis = db.collection("imoveis");
+  const query = {};
+  if (filtros.estado) query.uf = filtros.estado;
+  if (filtros.cidade) query.cidade = filtros.cidade;
+  if (filtros.bairro && Array.isArray(filtros.bairro) && filtros.bairro.length > 0) {
+    query.bairro = { $in: filtros.bairro };
+  }
+  if (filtros.tipoImovel && filtros.tipoImovel !== "indiferente") {
+    query.tipo_imovel = filtros.tipoImovel;
+  }
+  if (filtros.valor && typeof filtros.valor === "string") {
+    if (filtros.valor.startsWith("<")) {
+      const num = parseFloat(filtros.valor.replace("<", ""));
+      query.valor_avaliacao = { $lt: num };
+    } else if (filtros.valor.startsWith(">")) {
+      const num = parseFloat(filtros.valor.replace(">", ""));
+      query.valor_avaliacao = { $gt: num };
+    } else if (filtros.valor.includes("-")) {
+      const [min, max] = filtros.valor.split("-").map(Number);
+      query.valor_avaliacao = { $gte: min, $lte: max };
+    }
+  }
+  if (filtros.banco && filtros.banco.length > 0) {
+    query.banco = { $in: filtros.banco };
+  }
+  return yield imoveis.find(query).toArray();
+});
 
 // src/utils/http-helper.ts
 var ok = (data) => __async(null, null, function* () {
@@ -166,6 +206,25 @@ var ListFavoritesService = (userId) => __async(null, null, function* () {
   response = yield ok(data);
   return response;
 });
+var listBairrosService = () => __async(null, null, function* () {
+  let response = null;
+  const data = yield findBairros();
+  if (data) {
+    response = yield ok(data);
+  } else {
+    response = yield noContent();
+  }
+  return response;
+});
+var listImoveisFiltradosService = (filtros) => __async(null, null, function* () {
+  let response = null;
+  if (!filtros) {
+    response = yield badRequest("Filtros inv\xE1lidos");
+  }
+  const data = yield filterImoveis(filtros);
+  response = yield ok(data);
+  return response;
+});
 
 // src/controller/imoveis-controller.ts
 var ListImoveis = (req, res) => __async(null, null, function* () {
@@ -175,6 +234,17 @@ var ListImoveis = (req, res) => __async(null, null, function* () {
 var ListFavorites = (req, res) => __async(null, null, function* () {
   const userId = req.user.userId;
   const httpResponse = yield ListFavoritesService(userId);
+  if (httpResponse) {
+    res.status(httpResponse.statusCode).json(httpResponse.body);
+  }
+});
+var listBairros = (req, res) => __async(null, null, function* () {
+  const httpResponse = yield listBairrosService();
+  res.status(httpResponse.statusCode).json(httpResponse.body);
+});
+var listImoveisFiltrados = (req, res) => __async(null, null, function* () {
+  const filtros = req.body;
+  const httpResponse = yield listImoveisFiltradosService(filtros);
   if (httpResponse) {
     res.status(httpResponse.statusCode).json(httpResponse.body);
   }
@@ -442,6 +512,8 @@ var adminVerification = (req, res, next) => {
 var router = (0, import_express.Router)();
 router.get("/imoveis", authenticateLogin, ListImoveis);
 router.get("/imoveis/favoritos", authenticateLogin, ListFavorites);
+router.get("/imoveis/bairros", listBairros);
+router.post("/imoveis/filtros", listImoveisFiltrados);
 router.get("/usuario", authenticateLogin, getUser);
 router.post("/usuario", authenticateLogin, adminVerification, postUser);
 router.post("/usuario/login", postLogin);

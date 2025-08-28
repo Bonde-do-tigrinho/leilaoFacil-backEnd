@@ -54,3 +54,49 @@ export const findFavorites = async (userId:string) =>{
     process.exit(1)
   }
 }
+
+export const findBairros = async () =>{
+    try{
+      const db = connectToDatabase.db("MotorDeBusca")
+      const imoveis = db.collection<Imovel>("imoveis")
+      const bairros = await imoveis.distinct("bairro")
+
+      return bairros
+    }catch(e){
+      console.log(e)
+      process.exit(1)
+    }
+}
+
+export const filterImoveis = async (filtros: any) => {
+  const db = connectToDatabase.db("MotorDeBusca");
+  const imoveis = db.collection("imoveis");
+
+  const query: any = {};
+
+  if (filtros.estado) query.uf = filtros.estado;
+  if (filtros.cidade) query.cidade = filtros.cidade;
+  if (filtros.bairro && Array.isArray(filtros.bairro) && filtros.bairro.length > 0) {
+    query.bairro = { $in: filtros.bairro };
+  }
+  if (filtros.tipoImovel && filtros.tipoImovel !== "indiferente") {
+    query.tipo_imovel = filtros.tipoImovel;
+  }
+  if (filtros.valor && typeof filtros.valor === "string") {
+    if (filtros.valor.startsWith("<")) {
+      const num = parseFloat(filtros.valor.replace("<", ""));
+      query.valor_avaliacao = { $lt: num };
+    } else if (filtros.valor.startsWith(">")) {
+      const num = parseFloat(filtros.valor.replace(">", ""));
+      query.valor_avaliacao = { $gt: num };
+    } else if (filtros.valor.includes("-")) {
+      const [min, max] = filtros.valor.split("-").map(Number);
+      query.valor_avaliacao = { $gte: min, $lte: max };
+    }
+  }
+  if (filtros.banco && filtros.banco.length > 0) {
+    query.banco = { $in: filtros.banco };
+  }
+
+  return await imoveis.find(query).toArray();
+};
