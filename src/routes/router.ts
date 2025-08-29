@@ -8,8 +8,8 @@ const router = Router();
 //imoveis
 router.get('/imoveis', authenticateLogin, ImoveisController.ListImoveis)
 router.get('/imoveis/favoritos', authenticateLogin ,ImoveisController.ListFavorites)
-router.get('/imoveis/bairros', ImoveisController.listBairros)
-router.post('/imoveis/filtros', ImoveisController.listImoveisFiltrados)
+router.get('/imoveis/bairros', authenticateLogin, ImoveisController.listBairros)
+router.post('/imoveis/filtros', authenticateLogin, ImoveisController.listImoveisFiltrados)
 
 //usuario
 router.get('/usuario', authenticateLogin, UserController.getUser)
