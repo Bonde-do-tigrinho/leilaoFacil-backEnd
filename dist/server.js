@@ -519,8 +519,8 @@ var adminVerification = (req, res, next) => {
 var router = (0, import_express.Router)();
 router.get("/imoveis", authenticateLogin, ListImoveis);
 router.get("/imoveis/favoritos", authenticateLogin, ListFavorites);
-router.get("/imoveis/bairros", listBairros);
-router.post("/imoveis/filtros", listImoveisFiltrados);
+router.get("/imoveis/bairros", authenticateLogin, listBairros);
+router.post("/imoveis/filtros", authenticateLogin, listImoveisFiltrados);
 router.get("/usuario", authenticateLogin, getUser);
 router.post("/usuario", authenticateLogin, adminVerification, postUser);
 router.post("/usuario/login", postLogin);
