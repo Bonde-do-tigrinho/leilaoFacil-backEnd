@@ -1,3 +1,4 @@
+import { bairrosZonaLesteRegiaoUnicos } from "../database/bairros"
 import * as ImoveisRepository from "../repositories/imoveis-repository"
 import { badRequest, noContent, ok } from "../utils/http-helper"
 
@@ -31,7 +32,7 @@ export const ListFavoritesService = async (userId:string) =>{
 
 export const listBairrosService = async () =>{
     let response = null;
-    const data = await ImoveisRepository.findBairros();
+    const data = bairrosZonaLesteRegiaoUnicos;
 
     if(data){
         response = await ok(data);
