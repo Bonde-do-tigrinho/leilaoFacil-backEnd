@@ -56,6 +56,89 @@ var connectToDatabase = new import_mongodb.MongoClient(MONGO_URI);
 // src/routes/router.ts
 var import_express = require("express");
 
+// src/database/bairros.ts
+var bairrosZonaLesteRegiao = [
+  "ITAQUERA",
+  "CIDADE LIDER",
+  "JARDIM LAJEADO",
+  "JARDIM NELIA",
+  "JARDIM NOEMIA",
+  "JARDIM NOSSA SENHORA DO CARMO",
+  "JARDIM SANTA TEREZINHA (ZONA LESTE)",
+  "JARDIM SAO CRISTOVAO",
+  "JARDIM SAO PAULO(ZONA LESTE)",
+  "PARQUE RESIDENCIAL ORATORIO",
+  "PARQUE BOTURUSSU",
+  "VILA CARMOSINA",
+  "VILA CURUCA",
+  "VILA ESPERANCA",
+  "VILA MATILDE",
+  "VILA NOVA CURUCA",
+  "VILA PRUDENTE",
+  "VILA RE",
+  "PENHA DE FRANCA",
+  "PARADA XV DE NOVEMBRO",
+  "COLONIA (ZONA LESTE)",
+  "N\xDACLEO LAGEADO",
+  // São Miguel Paulista e arredores
+  "S\xC3O MIGUEL PAULISTA",
+  "DISTRITO S\xC3O MIGUEL PAULISTA",
+  "DT S\xC3O MIGUEL PAULISTA",
+  "DISTRITO DE SAO MIGUEL P",
+  "JARDIM HELENA",
+  "JARDIM ANGELA (ZONA LESTE)",
+  "JARDIM INDEPENDENCIA",
+  "JARDIM MATARAZZO",
+  "JARDIM NOVE DE JULHO",
+  "JARDIM TIETE",
+  "PARQUE GUARANI",
+  // Guaianases e arredores
+  "GUAIANAZES",
+  "GUIANAZES",
+  "DISTRITO DE GUAIANASES",
+  "DISTRITO DE GUAIANAZES",
+  "N\xDACLEO LAGEADO",
+  // Ermelino Matarazzo e arredores
+  "ERMELINO MATARAZZO",
+  "CANGAIBA",
+  "JARDIM AURORA (ZONA LESTE)",
+  "JARDIM BRASILIA (ZONA LESTE)",
+  "JARDIM DA LARANJEIRA (ZONA LESTE)",
+  // Penha e arredores
+  "PENHA DE FRANCA",
+  "VILA ESPERANCA",
+  "VILA MATILDE",
+  "VILA RE",
+  "VILA CURUCA",
+  "VILA NOVA CURUCA",
+  "JARDIM SOARES",
+  "JARDIM NELIA",
+  "JARDIM AMERICA DA PENHA",
+  "JARDIM ARICANDUVA",
+  "PARADA XV DE NOVEMBRO",
+  // Outros bairros próximos e limítrofes
+  "JARDIM AMARALINA",
+  "JARDIM BRASILIA (ZONA LESTE)",
+  "JARDIM DA LARANJEIRA (ZONA LESTE)",
+  "JARDIM SANTA TEREZINHA (ZONA LESTE)",
+  "JARDIM NOSSA SENHORA DO CARMO",
+  "JARDIM NOVE DE JULHO",
+  "JARDIM TIETE",
+  "PARQUE BOTURUSSU",
+  "PARQUE GUARANI",
+  "PARQUE RESIDENCIAL ORATORIO",
+  "VILA CARMOSINA",
+  "VILA CURUCA",
+  "VILA ESPERANCA",
+  "VILA MATILDE",
+  "VILA NOVA CURUCA",
+  "VILA PRUDENTE",
+  "VILA RE",
+  "COLONIA (ZONA LESTE)",
+  "N\xDACLEO LAGEADO"
+];
+var bairrosZonaLesteRegiaoUnicos = Array.from(new Set(bairrosZonaLesteRegiao));
+
 // src/repositories/imoveis-repository.ts
 var import_mongodb2 = require("mongodb");
 var findAllImoveis = () => __async(null, null, function* () {
@@ -94,17 +177,6 @@ var findFavorites = (userId) => __async(null, null, function* () {
     );
     const favoritos = yield imoveis.find({ _id: { $in: favoritosIds } }).toArray();
     return favoritos;
-  } catch (e) {
-    console.log(e);
-    process.exit(1);
-  }
-});
-var findBairros = () => __async(null, null, function* () {
-  try {
-    const db = connectToDatabase.db("MotorDeBusca");
-    const imoveis = db.collection("imoveis");
-    const bairros = yield imoveis.distinct("bairro");
-    return bairros;
   } catch (e) {
     console.log(e);
     process.exit(1);
@@ -208,7 +280,7 @@ var ListFavoritesService = (userId) => __async(null, null, function* () {
 });
 var listBairrosService = () => __async(null, null, function* () {
   let response = null;
-  const data = yield findBairros();
+  const data = bairrosZonaLesteRegiaoUnicos;
   if (data) {
     response = yield ok(data);
   } else {
@@ -408,7 +480,7 @@ var loginUser = (email, password) => __async(null, null, function* () {
     return response;
   }
   const token = import_jsonwebtoken.default.sign(
-    { userId: user._id, email: user.email, cargo: user.cargo, isAdmin: user.isAdmin },
+    { userId: user._id, name: user.nome, email: user.email, cargo: user.cargo, isAdmin: user.isAdmin },
     JWT_SECRET,
     { expiresIn: "1h" }
   );
