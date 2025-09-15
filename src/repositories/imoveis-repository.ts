@@ -55,19 +55,6 @@ export const findFavorites = async (userId:string) =>{
   }
 }
 
-export const findBairros = async () =>{
-    try{
-      const db = connectToDatabase.db("MotorDeBusca")
-      const imoveis = db.collection<Imovel>("imoveis")
-      const bairros = await imoveis.distinct("bairro")
-
-      return bairros
-    }catch(e){
-      console.log(e)
-      process.exit(1)
-    }
-}
-
 export const filterImoveis = async (filtros: any) => {
   const db = connectToDatabase.db("MotorDeBusca");
   const imoveis = db.collection("imoveis");
