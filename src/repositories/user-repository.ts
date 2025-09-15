@@ -98,8 +98,8 @@ export const listUser = async (userId: string) => {
 
     return data;
   } catch (error) {
-    console.error("erro ao listar usuário", error);
-    throw error;
+      console.error("erro ao listar usuário", error);
+      throw error;
   }
 };
 
