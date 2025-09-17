@@ -324,11 +324,23 @@ var listImoveisFiltrados = (req, res) => __async(null, null, function* () {
 
 // src/repositories/user-repository.ts
 var import_mongodb3 = require("mongodb");
+var import_joi = __toESM(require("joi"));
+var userSchema = import_joi.default.object({
+  name: import_joi.default.string().min(3).max(30).required(),
+  email: import_joi.default.string().email().required(),
+  password: import_joi.default.string().min(6).required(),
+  cargo: import_joi.default.string().min(3).required(),
+  favoritos: import_joi.default.array().items(import_joi.default.string().hex().length(24)).default([])
+});
 var insertUser = (user) => __async(null, null, function* () {
   try {
+    const { error, value } = userSchema.validate(user);
+    if (error) {
+      throw new Error(`Dados de usu\xE1rio inv\xE1lidos: ${error.message}`);
+    }
     const db = connectToDatabase.db("MotorDeBusca");
     const users = db.collection("users");
-    const result = yield users.insertOne(user);
+    const result = yield users.insertOne(value);
     return result;
   } catch (error) {
     console.error("erro ao inserir usu\xE1rio", error);
@@ -337,6 +349,10 @@ var insertUser = (user) => __async(null, null, function* () {
 });
 var findUserByEmail = (email) => __async(null, null, function* () {
   try {
+    const { error } = import_joi.default.string().email().required().validate(email);
+    if (error) {
+      throw new Error(`Email inv\xE1lido: ${error.message}`);
+    }
     const db = connectToDatabase.db("MotorDeBusca");
     const users = db.collection("users");
     const query = { email };
@@ -349,6 +365,10 @@ var findUserByEmail = (email) => __async(null, null, function* () {
 });
 var alterPassword = (email, hashedPassword) => __async(null, null, function* () {
   try {
+    const { error: emailError } = import_joi.default.string().email().required().validate(email);
+    if (emailError) throw new Error("Email inv\xE1lido");
+    const { error: passError } = import_joi.default.string().min(6).required().validate(hashedPassword);
+    if (passError) throw new Error("Senha inv\xE1lida");
     const db = connectToDatabase.db("MotorDeBusca");
     const users = db.collection("users");
     const result = yield users.updateOne(
@@ -362,39 +382,40 @@ var alterPassword = (email, hashedPassword) => __async(null, null, function* () 
   }
 });
 var addFavorite = (userId, imovelId) => __async(null, null, function* () {
-  console.log("Adicionando favorito:", { userId, imovelId });
-  if (!import_mongodb3.ObjectId.isValid(userId)) {
-    throw new Error("userId inv\xE1lido");
+  try {
+    if (!import_mongodb3.ObjectId.isValid(userId)) throw new Error("userId inv\xE1lido");
+    if (!import_mongodb3.ObjectId.isValid(imovelId)) throw new Error("imovelId inv\xE1lido");
+    const db = connectToDatabase.db("MotorDeBusca");
+    const users = db.collection("users");
+    const result = yield users.updateOne(
+      { _id: new import_mongodb3.ObjectId(userId) },
+      { $addToSet: { favoritos: new import_mongodb3.ObjectId(imovelId) } }
+    );
+    return result;
+  } catch (error) {
+    console.error("erro ao adicionar favorito", error);
+    throw error;
   }
-  if (!import_mongodb3.ObjectId.isValid(imovelId)) {
-    throw new Error("imovelId inv\xE1lido");
-  }
-  const db = connectToDatabase.db("MotorDeBusca");
-  const users = db.collection("users");
-  const result = yield users.updateOne(
-    { _id: new import_mongodb3.ObjectId(userId) },
-    { $addToSet: { favoritos: new import_mongodb3.ObjectId(imovelId) } }
-  );
-  return result;
 });
 var removeFavorite = (userId, imovelId) => __async(null, null, function* () {
-  console.log("Removendo favorito:", { userId, imovelId });
-  if (!import_mongodb3.ObjectId.isValid(userId)) {
-    throw new Error("userId inv\xE1lido");
+  try {
+    if (!import_mongodb3.ObjectId.isValid(userId)) throw new Error("userId inv\xE1lido");
+    if (!import_mongodb3.ObjectId.isValid(imovelId)) throw new Error("imovelId inv\xE1lido");
+    const db = connectToDatabase.db("MotorDeBusca");
+    const users = db.collection("users");
+    const result = yield users.updateOne(
+      { _id: new import_mongodb3.ObjectId(userId) },
+      { $pull: { favoritos: new import_mongodb3.ObjectId(imovelId) } }
+    );
+    return result;
+  } catch (error) {
+    console.error("erro ao remover favorito", error);
+    throw error;
   }
-  if (!import_mongodb3.ObjectId.isValid(imovelId)) {
-    throw new Error("imovelId inv\xE1lido");
-  }
-  const db = connectToDatabase.db("MotorDeBusca");
-  const users = db.collection("users");
-  const result = yield users.updateOne(
-    { _id: new import_mongodb3.ObjectId(userId) },
-    { $pull: { favoritos: new import_mongodb3.ObjectId(imovelId) } }
-  );
-  return result;
 });
 var listUser = (userId) => __async(null, null, function* () {
   try {
+    if (!import_mongodb3.ObjectId.isValid(userId)) throw new Error("userId inv\xE1lido");
     const db = connectToDatabase.db("MotorDeBusca");
     const users = db.collection("users");
     const query = { _id: new import_mongodb3.ObjectId(userId) };
